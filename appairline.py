@@ -143,6 +143,9 @@ if price_col:
     price_to_use = "converted_price"
 else:
     price_to_use = price_col
+# ------------------- Log-transform prices for heatmap (optional) -------------------
+import numpy as np
+filtered_df["log_price"] = np.log1p(filtered_df[price_to_use])
 
 # ------------------- Dashboard -------------------
 st.markdown(
@@ -215,14 +218,16 @@ if price_to_use and duration_col and not filtered_df.empty:
 
 # --- Heatmap ---
 if price_to_use and not filtered_df.empty:
-    st.subheader(f"Heatmap of Average Prices by Route ({currency})")
-    heatmap_df = filtered_df.groupby([source_col, dest_col])[price_to_use].mean().reset_index()
-    fig_heatmap = px.density_heatmap(
-        heatmap_df,
+    st.subheader("Average Price Heatmap (Source vs Destination)")
+    fig = px.density_heatmap(
+        filtered_df,
         x=source_col,
         y=dest_col,
         z=price_to_use,
-        color_continuous_scale=px.colors.sequential.OrRd,
+        color_continuous_scale=px.colors.sequential.Viridis,  # change this for different colors
+        title="Price Heatmap"
+    )
+    st.plotly_chart(fig, use_container_width=True)
         text_auto=True,  # shows numbers in the heatmap
         title=f"Heatmap of Average Flight Prices by Route ({currency})",
         labels=label_map
