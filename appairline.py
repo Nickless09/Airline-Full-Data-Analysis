@@ -219,7 +219,7 @@ if price_to_use and not filtered_df.empty:
         x=source_col,
         y=dest_col,
         z=price_to_use,
-        color_continuous_scale="Viridis",
+        color_continuous_scale="Inferno",
         title=f"Heatmap of Average Flight Prices by Route ({currency})",
         labels=label_map
     )
