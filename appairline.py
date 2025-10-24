@@ -223,7 +223,7 @@ if price_to_use and not filtered_df.empty:
         y=dest_col,
         z=price_to_use,
         color_continuous_scale=px.colors.sequential.Viridis,
-        text_auto=True  # shows numbers in the heatmap
+        text_auto=True,  # shows numbers in the heatmap
         title=f"Heatmap of Average Flight Prices by Route ({currency})",
         labels=label_map
     )
