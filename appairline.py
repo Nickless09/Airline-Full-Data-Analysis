@@ -225,5 +225,3 @@ if price_to_use and not filtered_df.empty:
         labels=label_map
     )
     st.plotly_chart(fig_heatmap, use_container_width=True)
-
-st.markdown("Data source: Clean_Dataset, Economy, Business CSV files")
