@@ -65,10 +65,10 @@ def get_col(df, *names):
 st.sidebar.title("Datasets")
 dataset_choice = st.sidebar.radio(
     "Select Dataset",
-    ["All Flights", "Economy", "Business"]
+    ["Clean_Dataset", "Economy", "Business"]
 )
 
-if dataset_choice == "All Flights":
+if dataset_choice == "Clean_Dataset":
     df = load_data(CLEAN_FILE)
 elif dataset_choice == "Economy":
     df = load_data(ECONOMY_FILE)
