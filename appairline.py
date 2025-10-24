@@ -4,30 +4,31 @@ import plotly.express as px
 import re
 import os
 
-# 1️⃣ Define paths first
+# ------------------- Paths -------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CLEAN_FILE = os.path.join(BASE_DIR, "dat", "Clean_Dataset.csv")
 ECONOMY_FILE = os.path.join(BASE_DIR, "dat", "economy.csv")
 BUSINESS_FILE = os.path.join(BASE_DIR, "dat", "business.csv")
-
-# 2️⃣ Check if file exists
-if not os.path.exists(CLEAN_FILE):
-    st.error(f"File not found: {CLEAN_FILE}")
-
-# Build paths to your CSVs
-CLEAN_FILE = os.path.join(BASE_DIR, "dat", "Clean_Dataset.csv")
-ECONOMY_FILE = os.path.join(BASE_DIR, "dat", "economy.csv")
-BUSINESS_FILE = os.path.join(BASE_DIR, "dat", "business.csv")
-
 
 st.set_page_config(page_title="Airline Data Dashboard", layout="wide")
 
 # ------------------- Load CSV -------------------
 @st.cache_data
 def load_data(file_path):
-    df = pd.read_csv(file_path)
-    df.columns = [c.strip().lower() for c in df.columns]  # normalize column names
-    return df
+    """Load CSV safely with error handling"""
+    if not os.path.exists(file_path):
+        st.error(f"File not found: {file_path}")
+        return pd.DataFrame()
+    if os.path.getsize(file_path) == 0:
+        st.error(f"File is empty: {file_path}")
+        return pd.DataFrame()
+    try:
+        df = pd.read_csv(file_path)
+        df.columns = [c.strip().lower() for c in df.columns]  # normalize column names
+        return df
+    except Exception as e:
+        st.error(f"Error loading {file_path}: {e}")
+        return pd.DataFrame()
 
 # ------------------- Duration Parser -------------------
 def parse_duration(x):
@@ -35,13 +36,13 @@ def parse_duration(x):
     x = str(x).strip()
     if not x or x.lower() in ['nan', 'none']:
         return None
-    # 1) Format like "2h 30m" or "2h" or "45m"
+    # Format like "2h 30m" or "2h" or "45m"
     match = re.match(r'(?:(\d+)h)?\s*(?:(\d+)m)?', x)
     if match and (match.group(1) or match.group(2)):
         hours = int(match.group(1) or 0)
         minutes = int(match.group(2) or 0)
         return hours + minutes/60
-    # 2) Format like "02:30"
+    # Format like "02:30"
     if ':' in x:
         parts = x.split(':')
         if len(parts) == 2:
@@ -51,7 +52,7 @@ def parse_duration(x):
                 return hours + minutes/60
             except:
                 return None
-    # 3) Pure number
+    # Pure number
     try:
         val = float(re.sub(r'[^\d.]', '', x))
         if val > 10:
@@ -82,6 +83,10 @@ elif dataset_choice == "Economy":
 else:
     df = load_data(BUSINESS_FILE)
 
+# Stop execution if dataframe is empty
+if df.empty:
+    st.stop()
+
 # ------------------- Detect columns -------------------
 airline_col = get_col(df, "airline", "carrier")
 source_col = get_col(df, "source_city", "source", "from")
@@ -99,7 +104,6 @@ for col in [price_col, days_left_col]:
 
 if duration_col and duration_col in df.columns:
     df[duration_col] = df[duration_col].apply(parse_duration)
-
 
 # ------------------- Currency Conversion -------------------
 currency = st.sidebar.selectbox(
@@ -126,8 +130,6 @@ if class_col:
 else:
     classes = None
 
-
-
 # ------------------- Apply Filters -------------------
 filtered_df = df[
     (df[airline_col].isin(airlines)) &
@@ -150,8 +152,8 @@ st.title("✈️ Airline Fare Dashboard")
 st.markdown(f"Currently viewing **{dataset_choice}** dataset.")
 
 # --- KPIs ---
-avg_price = round(filtered_df[price_to_use].mean(), 2) if price_to_use else 0
-avg_duration = round(filtered_df[duration_col].mean(), 2) if duration_col else 0
+avg_price = round(filtered_df[price_to_use].mean(), 2) if price_to_use and not filtered_df.empty else 0
+avg_duration = round(filtered_df[duration_col].mean(), 2) if duration_col and not filtered_df.empty else 0
 total_flights = len(filtered_df)
 min_price = round(filtered_df[price_to_use].min(), 2) if price_to_use and not filtered_df.empty else 0
 max_price = round(filtered_df[price_to_use].max(), 2) if price_to_use and not filtered_df.empty else 0
@@ -164,7 +166,7 @@ col4.metric(f"Cheapest Flight ({currency})", min_price)
 col5.metric(f"Most Expensive Flight ({currency})", max_price)
 
 # --- Charts ---
-if price_to_use:
+if price_to_use and not filtered_df.empty:
     st.subheader(f"Average Price by Airline ({currency})")
     fig1 = px.bar(
         filtered_df.groupby(airline_col)[price_to_use].mean().reset_index(),
@@ -181,7 +183,7 @@ if price_to_use:
     )
     st.plotly_chart(fig4, use_container_width=True)
 
-if price_to_use and days_left_col:
+if price_to_use and days_left_col and not filtered_df.empty:
     st.subheader(f"Price vs. Days Left ({currency})")
     fig2 = px.scatter(
         filtered_df, x=days_left_col, y=price_to_use, color=airline_col,
@@ -189,7 +191,7 @@ if price_to_use and days_left_col:
     )
     st.plotly_chart(fig2, use_container_width=True)
 
-if price_to_use and duration_col:
+if price_to_use and duration_col and not filtered_df.empty:
     st.subheader(f"Flight Duration vs. Price ({currency})")
     fig3 = px.scatter(
         filtered_df, x=duration_col, y=price_to_use, color=class_col if class_col else None,
@@ -198,4 +200,3 @@ if price_to_use and duration_col:
     st.plotly_chart(fig3, use_container_width=True)
 
 st.markdown("Data source: Clean_Dataset, Economy, Business CSV files")
-
