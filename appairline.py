@@ -36,13 +36,11 @@ def parse_duration(x):
     x = str(x).strip()
     if not x or x.lower() in ['nan', 'none']:
         return None
-    # Format like "2h 30m" or "2h" or "45m"
     match = re.match(r'(?:(\d+)h)?\s*(?:(\d+)m)?', x)
     if match and (match.group(1) or match.group(2)):
         hours = int(match.group(1) or 0)
         minutes = int(match.group(2) or 0)
         return hours + minutes/60
-    # Format like "02:30"
     if ':' in x:
         parts = x.split(':')
         if len(parts) == 2:
@@ -52,11 +50,10 @@ def parse_duration(x):
                 return hours + minutes/60
             except:
                 return None
-    # Pure number
     try:
         val = float(re.sub(r'[^\d.]', '', x))
         if val > 10:
-            return val / 60  # assume minutes if > 10
+            return val / 60
         return val
     except:
         return None
@@ -76,7 +73,7 @@ dataset_choice = st.sidebar.radio(
     ["All Flights", "Economy", "Business"]
 )
 
-if dataset_choice == "All Flights":
+if dataset_choice == "Clean_Dataset":
     df = load_data(CLEAN_FILE)
 elif dataset_choice == "Economy":
     df = load_data(ECONOMY_FILE)
@@ -166,12 +163,23 @@ col4.metric(f"Cheapest Flight ({currency})", min_price)
 col5.metric(f"Most Expensive Flight ({currency})", max_price)
 
 # --- Charts ---
+label_map = {
+    airline_col: "Airline",
+    source_col: "Source City",
+    dest_col: "Destination City",
+    price_to_use: f"Price ({currency})",
+    duration_col: "Duration (hours)",
+    days_left_col: "Days Left",
+    class_col: "Class"
+}
+
 if price_to_use and not filtered_df.empty:
     st.subheader(f"Average Price by Airline ({currency})")
     fig1 = px.bar(
         filtered_df.groupby(airline_col)[price_to_use].mean().reset_index(),
         x=airline_col, y=price_to_use, color=airline_col,
-        title=f"Average Price per Airline ({currency})"
+        title=f"Average Price per Airline ({currency})",
+        labels=label_map
     )
     st.plotly_chart(fig1, use_container_width=True)
 
@@ -179,7 +187,8 @@ if price_to_use and not filtered_df.empty:
     route_df = filtered_df.groupby([source_col, dest_col])[price_to_use].mean().reset_index()
     fig4 = px.bar(
         route_df, x=source_col, y=price_to_use, color=dest_col,
-        title=f"Average Price by Route ({currency})", barmode="group"
+        title=f"Average Price by Route ({currency})", barmode="group",
+        labels=label_map
     )
     st.plotly_chart(fig4, use_container_width=True)
 
@@ -187,7 +196,8 @@ if price_to_use and days_left_col and not filtered_df.empty:
     st.subheader(f"Price vs. Days Left ({currency})")
     fig2 = px.scatter(
         filtered_df, x=days_left_col, y=price_to_use, color=airline_col,
-        trendline="ols", title=f"Price vs Days Left by Airline ({currency})"
+        trendline="ols", title=f"Price vs Days Left by Airline ({currency})",
+        labels=label_map
     )
     st.plotly_chart(fig2, use_container_width=True)
 
@@ -195,13 +205,14 @@ if price_to_use and duration_col and not filtered_df.empty:
     st.subheader(f"Flight Duration vs. Price ({currency})")
     fig3 = px.scatter(
         filtered_df, x=duration_col, y=price_to_use, color=class_col if class_col else None,
-        title=f"Flight Duration vs Price ({currency})" + (" (by Class)" if class_col else "")
+        title=f"Flight Duration vs Price ({currency})" + (" (by Class)" if class_col else ""),
+        labels=label_map
     )
     st.plotly_chart(fig3, use_container_width=True)
 
-# --- NEW: Heatmap of Average Price by Source-Destination ---
+# --- Heatmap ---
 if price_to_use and not filtered_df.empty:
-    st.subheader(f"Heatmap: Average Price by Route ({currency})")
+    st.subheader(f"Heatmap of Average Prices by Route ({currency})")
     heatmap_df = filtered_df.groupby([source_col, dest_col])[price_to_use].mean().reset_index()
     fig_heatmap = px.density_heatmap(
         heatmap_df,
@@ -209,7 +220,8 @@ if price_to_use and not filtered_df.empty:
         y=dest_col,
         z=price_to_use,
         color_continuous_scale="Viridis",
-        title=f"Heatmap of Average Flight Prices by Route ({currency})"
+        title=f"Heatmap of Average Flight Prices by Route ({currency})",
+        labels=label_map
     )
     st.plotly_chart(fig_heatmap, use_container_width=True)
 
