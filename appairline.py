@@ -163,12 +163,6 @@ col3.metric("Average Duration (hours)", avg_duration)
 col4.metric(f"Cheapest Flight ({currency})", min_price)
 col5.metric(f"Most Expensive Flight ({currency})", max_price)
 
-col1.metric("Total Flights", total_flights)
-col2.metric(f"Average Price ({currency})", avg_price)
-col3.metric("Average Duration (hours)", avg_duration)
-col4.metric(f"Cheapest Flight ({currency})", min_price)
-col5.metric(f"Most Expensive Flight ({currency})", max_price)
-
 # --- Charts ---
 label_map = {
     airline_col: "Airline",
