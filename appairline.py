@@ -147,6 +147,12 @@ if price_col:
     price_to_use = "converted_price"
 else:
     price_to_use = price_col
+
+# ------------------- Handle Empty Filter -------------------
+if filtered_df.empty:
+    st.warning("⚠️ No flights match the selected filters. Please adjust your selections.")
+    st.stop()  # stop execution so no charts or KPIs are shown
+    
 # ------------------- Dashboard -------------------
 st.markdown(
     "<h1 style='text-align: center;'>✈️ Airline Fare Dashboard</h1>", 
