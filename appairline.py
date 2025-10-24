@@ -76,7 +76,7 @@ dataset_choice = st.sidebar.radio(
     ["All Flights", "Economy", "Business"]
 )
 
-if dataset_choice == "Clean_Dataset":
+if dataset_choice == "All Flights":
     df = load_data(CLEAN_FILE)
 elif dataset_choice == "Economy":
     df = load_data(ECONOMY_FILE)
@@ -198,5 +198,19 @@ if price_to_use and duration_col and not filtered_df.empty:
         title=f"Flight Duration vs Price ({currency})" + (" (by Class)" if class_col else "")
     )
     st.plotly_chart(fig3, use_container_width=True)
+
+# --- NEW: Heatmap of Average Price by Source-Destination ---
+if price_to_use and not filtered_df.empty:
+    st.subheader(f"Heatmap: Average Price by Route ({currency})")
+    heatmap_df = filtered_df.groupby([source_col, dest_col])[price_to_use].mean().reset_index()
+    fig_heatmap = px.density_heatmap(
+        heatmap_df,
+        x=source_col,
+        y=dest_col,
+        z=price_to_use,
+        color_continuous_scale="Viridis",
+        title=f"Heatmap of Average Flight Prices by Route ({currency})"
+    )
+    st.plotly_chart(fig_heatmap, use_container_width=True)
 
 st.markdown("Data source: Clean_Dataset, Economy, Business CSV files")
