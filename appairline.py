@@ -216,11 +216,14 @@ if price_to_use and duration_col and not filtered_df.empty:
 if price_to_use and not filtered_df.empty:
     st.subheader("Average Price Heatmap (Source vs Destination)")
 
+    # Compute average price per route
+    route_avg = filtered_df.groupby([source_col, dest_col])[price_to_use].mean().reset_index()
+
     # Optional: create labels for cleaner axis names
     label_map = {source_col: "Source City", dest_col: "Destination City", price_to_use: f"Price ({currency})"}
 
     fig_heatmap = px.density_heatmap(
-        filtered_df,
+        route_avg,
         x=source_col,
         y=dest_col,
         z=price_to_use,
