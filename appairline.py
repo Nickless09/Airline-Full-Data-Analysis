@@ -4,11 +4,15 @@ import plotly.express as px
 import re
 import os
 
-# Get the folder where this app file lives
+# 1️⃣ Define paths first
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CLEAN_FILE = os.path.join(BASE_DIR, "dat", "Clean_Dataset.csv")
+ECONOMY_FILE = os.path.join(BASE_DIR, "dat", "economy.csv")
+BUSINESS_FILE = os.path.join(BASE_DIR, "dat", "business.csv")
+
+# 2️⃣ Check if file exists
 if not os.path.exists(CLEAN_FILE):
     st.error(f"File not found: {CLEAN_FILE}")
-
 
 # Build paths to your CSVs
 CLEAN_FILE = os.path.join(BASE_DIR, "dat", "Clean_Dataset.csv")
