@@ -226,7 +226,7 @@ if price_to_use and not filtered_df.empty:
         fig_heatmap = px.imshow(
             heatmap_data,
             text_auto=True,  # shows numbers in each cell
-            color_continuous_scale=px.colors.sequential.Oranges,
+            color_continuous_scale=px.colors.sequential.Reds,
             aspect="auto",
             labels={
                 "x": "Source City",
