@@ -212,43 +212,28 @@ if price_to_use and duration_col and not filtered_df.empty:
     )
     st.plotly_chart(fig3, use_container_width=True)
 
-# --- Heatmap ---
+# --- Heatmap using px.imshow ---
 if price_to_use and not filtered_df.empty:
     st.subheader("Average Price Heatmap (Source vs Destination)")
 
     # Compute average price per route
-    route_avg = (
-        filtered_df.groupby([source_col, dest_col])[price_to_use]
-        .mean()
-        .reset_index()
-    )
-
-    # Drop zero or missing averages
-    route_avg = route_avg[route_avg[price_to_use] > 0]
+    route_avg = filtered_df.groupby([source_col, dest_col])[price_to_use].mean().reset_index()
 
     if not route_avg.empty:
-        # Ensure z values are numeric
-        route_avg[price_to_use] = pd.to_numeric(route_avg[price_to_use], errors='coerce')
+        # Pivot table: rows=destination, cols=source, values=average price
+        heatmap_data = route_avg.pivot(index=dest_col, columns=source_col, values=price_to_use).fillna(0)
 
-        fig_heatmap = px.density_heatmap(
-            route_avg,
-            x=source_col,
-            y=dest_col,
-            z=price_to_use,
-            color_continuous_scale=px.colors.sequential.Oranges,  # single color
-            title=f"Heatmap of Average Flight Prices by Route ({currency})",
+        fig_heatmap = px.imshow(
+            heatmap_data,
+            text_auto=True,  # shows numbers in each cell
+            color_continuous_scale=px.colors.sequential.Oranges,
+            aspect="auto",
             labels={
-                source_col: "Source City",
-                dest_col: "Destination City",
-                price_to_use: f"Price ({currency})"
+                "x": "Source City",
+                "y": "Destination City",
+                "color": f"Price ({currency})"
             },
-            zmin=route_avg[price_to_use].min(),
-            zmax=route_avg[price_to_use].max()
-        )
-
-        # Show exact price on hover (formatted)
-        fig_heatmap.update_traces(
-            hovertemplate=f"<b>%{{x}}</b> → <b>%{{y}}</b><br>Price: %{{z:,.0f}} {currency}<extra></extra>"
+            title=f"Heatmap of Average Flight Prices by Route ({currency})"
         )
 
         st.plotly_chart(fig_heatmap, use_container_width=True)
