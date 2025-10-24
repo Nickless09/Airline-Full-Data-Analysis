@@ -54,11 +54,11 @@
 #     return None
 
 # # ------------------- Sidebar Dataset Selection -------------------
-# st.sidebar.title("Dataset Selection")
-# dataset_choice = st.sidebar.radio(
-#     "Select Dataset",
-#     ["Clean Dataset", "Economy", "Business"]
-# )
+st.sidebar.title("Dataset Selection")
+dataset_choice = st.sidebar.radio(
+    "Select Dataset",
+    ["Clean_Dataset", "Economy", "Business"]
+)
 
 if dataset_choice == "Clean_Dataset":
     df = load_data("dat/Clean_Dataset.csv")
