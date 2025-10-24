@@ -60,12 +60,12 @@
 #     ["Clean Dataset", "Economy", "Business"]
 # )
 
-# if dataset_choice == "Clean_Dataset":
-#     df = load_data(r"C:\Users\Alumne_mati1\curs-python\fonts\dat\Clean_Dataset.csv")
-# elif dataset_choice == "Economy":
-#     df = load_data(r"C:\Users\Alumne_mati1\curs-python\fonts\dat\economy.csv")
-# else:
-#     df = load_data(r"C:\Users\Alumne_mati1\curs-python\fonts\dat\business.csv")
+if dataset_choice == "Clean_Dataset":
+    df = load_data("dat/Clean_Dataset.csv")
+elif dataset_choice == "Economy":
+    df = load_data("dat/economy.csv")
+else:
+    df = load_data("dat/business.csv")
 
 # # ------------------- Detect columns -------------------
 # airline_col = get_col(df, "airline", "carrier")
