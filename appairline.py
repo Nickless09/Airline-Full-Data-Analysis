@@ -73,17 +73,21 @@ dataset_choice = st.sidebar.radio(
     ["All Flights", "Economy", "Business"]
 )
 
-if dataset_choice == "Clean_Dataset":
-    df = load_data(CLEAN_FILE)
-elif dataset_choice == "Economy":
-    df = load_data(ECONOMY_FILE)
-else:
-    df = load_data(BUSINESS_FILE)
+# Load individual datasets
+df_econ = load_data(ECONOMY_FILE)
+df_bus = load_data(BUSINESS_FILE)
+
+# Choose dataset based on selection
+if dataset_choice == "Economy":
+    df = df_econ.copy()
+elif dataset_choice == "Business":
+    df = df_bus.copy()
+else:  # "All Flights" = Economy + Business
+    df = pd.concat([df_econ, df_bus], ignore_index=True)
 
 # Stop execution if dataframe is empty
 if df.empty:
     st.stop()
-
 # ------------------- Detect columns -------------------
 airline_col = get_col(df, "airline", "carrier")
 source_col = get_col(df, "source_city", "source", "from")
