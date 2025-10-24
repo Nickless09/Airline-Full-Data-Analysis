@@ -143,8 +143,6 @@ if price_col:
     price_to_use = "converted_price"
 else:
     price_to_use = price_col
-# ------------------- Log-transform prices for heatmap (optional) -------------------
-route_avg = filtered_df.groupby([source_col, dest_col])[price_to_use].mean().reset_index()
 # ------------------- Dashboard -------------------
 st.markdown(
     "<h1 style='text-align: center;'>✈️ Airline Fare Dashboard</h1>", 
