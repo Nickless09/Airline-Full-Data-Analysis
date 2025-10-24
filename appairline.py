@@ -6,6 +6,9 @@ import os
 
 # Get the folder where this app file lives
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if not os.path.exists(CLEAN_FILE):
+    st.error(f"File not found: {CLEAN_FILE}")
+
 
 # Build paths to your CSVs
 CLEAN_FILE = os.path.join(BASE_DIR, "dat", "Clean_Dataset.csv")
