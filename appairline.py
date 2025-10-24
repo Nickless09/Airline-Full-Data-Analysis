@@ -73,7 +73,7 @@ def get_col(df, *names):
 st.sidebar.title("Datasets")
 dataset_choice = st.sidebar.radio(
     "Select Dataset",
-    ["Clean_Dataset", "Economy", "Business"]
+    ["All Flights", "Economy", "Business"]
 )
 
 if dataset_choice == "Clean_Dataset":
