@@ -227,16 +227,15 @@ if price_to_use and not filtered_df.empty:
     route_avg = route_avg[route_avg[price_to_use] > 0]
 
     if not route_avg.empty:
-        # Optional: format numbers for hover/text
-        route_avg["price_formatted"] = route_avg[price_to_use].apply(lambda x: f"{int(x):,}".replace(",", "."))
+        # Ensure z values are numeric
+        route_avg[price_to_use] = pd.to_numeric(route_avg[price_to_use], errors='coerce')
 
         fig_heatmap = px.density_heatmap(
             route_avg,
             x=source_col,
             y=dest_col,
             z=price_to_use,
-            color_continuous_scale=px.colors.sequential.Oranges,  # single, color-blind friendly
-            text_auto=True,  # shows numbers
+            color_continuous_scale=px.colors.sequential.Oranges,  # single color
             title=f"Heatmap of Average Flight Prices by Route ({currency})",
             labels={
                 source_col: "Source City",
@@ -245,6 +244,11 @@ if price_to_use and not filtered_df.empty:
             },
             zmin=route_avg[price_to_use].min(),
             zmax=route_avg[price_to_use].max()
+        )
+
+        # Show exact price on hover (formatted)
+        fig_heatmap.update_traces(
+            hovertemplate=f"<b>%{{x}}</b> → <b>%{{y}}</b><br>Price: %{{z:,.0f}} {currency}<extra></extra>"
         )
 
         st.plotly_chart(fig_heatmap, use_container_width=True)
