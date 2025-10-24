@@ -2,6 +2,16 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import re
+import os
+
+# Get the folder where this app file lives
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Build paths to your CSVs
+CLEAN_FILE = os.path.join(BASE_DIR, "dat", "Clean_Dataset.csv")
+ECONOMY_FILE = os.path.join(BASE_DIR, "dat", "economy.csv")
+BUSINESS_FILE = os.path.join(BASE_DIR, "dat", "business.csv")
+
 
 st.set_page_config(page_title="Airline Data Dashboard", layout="wide")
 
@@ -59,11 +69,11 @@ dataset_choice = st.sidebar.radio(
 )
 
 if dataset_choice == "All Flights":
-    df = load_data("dat/Clean_Dataset.csv")
+    df = load_data(CLEAN_FILE)
 elif dataset_choice == "Economy":
-    df = load_data("dat/economy.csv")
+    df = load_data(ECONOMY_FILE)
 else:
-    df = load_data("dat/business.csv")
+    df = load_data(BUSINESS_FILE)
 
 # ------------------- Detect columns -------------------
 airline_col = get_col(df, "airline", "carrier")
