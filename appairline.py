@@ -156,6 +156,13 @@ min_price = round(filtered_df[price_to_use].min(), 2) if price_to_use and not fi
 max_price = round(filtered_df[price_to_use].max(), 2) if price_to_use and not filtered_df.empty else 0
 
 col1, col2, col3, col4, col5 = st.columns(5)
+total_flights_formatted = f"{total_flights:,}".replace(",", ".")
+col1.metric("Total Flights", total_flights_formatted)
+col2.metric(f"Average Price ({currency})", avg_price)
+col3.metric("Average Duration (hours)", avg_duration)
+col4.metric(f"Cheapest Flight ({currency})", min_price)
+col5.metric(f"Most Expensive Flight ({currency})", max_price)
+
 col1.metric("Total Flights", total_flights)
 col2.metric(f"Average Price ({currency})", avg_price)
 col3.metric("Average Duration (hours)", avg_duration)
