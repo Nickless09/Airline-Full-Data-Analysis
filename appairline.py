@@ -229,23 +229,8 @@ if price_to_use and duration_col and not filtered_df.empty:
             x=duration_col,
             y=price_to_use,
             color=class_col if class_col else None,
+            opacity=0.6,  # makes overlapping points visible
             title=f"Flight Duration vs Price ({currency})" + (" (by Class)" if class_col else ""),
             labels=label_map
         )
         st.plotly_chart(fig3, use_container_width=True)
-
-
-    fig_heatmap = px.density_heatmap(
-        with st.expander("Show Flight Duration vs Price Chart"):
-        st.subheader(f"Flight Duration vs Price ({currency})")
-        route_avg,
-        x=source_col,
-        y=dest_col,
-        z=price_to_use,
-        color_continuous_scale=px.colors.sequential.OrRd,  # change for color
-        text_auto=True,  # shows numbers in the heatmap
-        title=f"Heatmap of Average Flight Prices by Route ({currency})",
-        labels=label_map
-    )
-
-    st.plotly_chart(fig_heatmap, use_container_width=True)
