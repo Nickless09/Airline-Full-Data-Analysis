@@ -6,7 +6,6 @@ import os
 
 # ------------------- Paths -------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CLEAN_FILE = os.path.join(BASE_DIR, "dat", "Clean_Dataset.csv")
 ECONOMY_FILE = os.path.join(BASE_DIR, "dat", "economy.csv")
 BUSINESS_FILE = os.path.join(BASE_DIR, "dat", "business.csv")
 
@@ -154,11 +153,11 @@ st.markdown(
 st.markdown(f"Currently viewing **{dataset_choice}** dataset.")
 
 # --- KPIs ---
-avg_price = round(filtered_df[price_to_use].mean(), 2) if price_to_use and not filtered_df.empty else 0
-avg_duration = round(filtered_df[duration_col].mean(), 2) if duration_col and not filtered_df.empty else 0
+avg_price = round(filtered_df[price_to_use].mean(), 2) if price_to_use else 0
+avg_duration = round(filtered_df[duration_col].mean(), 2) if duration_col else 0
 total_flights = len(filtered_df)
-min_price = round(filtered_df[price_to_use].min(), 2) if price_to_use and not filtered_df.empty else 0
-max_price = round(filtered_df[price_to_use].max(), 2) if price_to_use and not filtered_df.empty else 0
+min_price = round(filtered_df[price_to_use].min(), 2) if price_to_use else 0
+max_price = round(filtered_df[price_to_use].max(), 2) if price_to_use else 0
 
 col1, col2, col3, col4, col5 = st.columns(5)
 total_flights_formatted = f"{total_flights:,}".replace(",", ".")  
@@ -181,29 +180,27 @@ label_map = {
 }
 
 # Average Price by Airline
-if price_to_use and not filtered_df.empty:
-    st.subheader(f"Average Price by Airline ({currency})")
-    fig1 = px.bar(
-        filtered_df.groupby(airline_col)[price_to_use].mean().reset_index(),
-        x=airline_col, y=price_to_use, color=airline_col,
-        title=f"Average Price per Airline ({currency})",
-        labels=label_map
-    )
-    st.plotly_chart(fig1, use_container_width=True)
+st.subheader(f"Average Price by Airline ({currency})")
+fig1 = px.bar(
+    filtered_df.groupby(airline_col)[price_to_use].mean().reset_index(),
+    x=airline_col, y=price_to_use, color=airline_col,
+    title=f"Average Price per Airline ({currency})",
+    labels=label_map
+)
+st.plotly_chart(fig1, use_container_width=True)
 
 # Average Price by Route
-if price_to_use and not filtered_df.empty:
-    st.subheader(f"Average Price by Source-Destination Route ({currency})")
-    route_df = filtered_df.groupby([source_col, dest_col])[price_to_use].mean().reset_index()
-    fig2 = px.bar(
-        route_df, x=source_col, y=price_to_use, color=dest_col,
-        title=f"Average Price by Route ({currency})", barmode="group",
-        labels=label_map
-    )
-    st.plotly_chart(fig2, use_container_width=True)
+st.subheader(f"Average Price by Source-Destination Route ({currency})")
+route_df = filtered_df.groupby([source_col, dest_col])[price_to_use].mean().reset_index()
+fig2 = px.bar(
+    route_df, x=source_col, y=price_to_use, color=dest_col,
+    title=f"Average Price by Route ({currency})", barmode="group",
+    labels=label_map
+)
+st.plotly_chart(fig2, use_container_width=True)
 
 # Price vs Days Left
-if price_to_use and days_left_col and not filtered_df.empty:
+if days_left_col:
     st.subheader(f"Price vs. Days Left ({currency})")
     fig3 = px.scatter(
         filtered_df, x=days_left_col, y=price_to_use, color=airline_col,
@@ -212,18 +209,4 @@ if price_to_use and days_left_col and not filtered_df.empty:
     )
     st.plotly_chart(fig3, use_container_width=True)
 
-if duration_col and price_to_use and not filtered_df.empty:
-    st.subheader(f"Flight Duration vs Price ({currency})")
-    fig4 = px.scatter(
-        filtered_df,
-        x=duration_col,
-        y=price_to_use,
-        color=class_col if class_col else None,
-        opacity=0.5,
-        labels={
-            duration_col: "Duration (hours)",
-            price_to_use: f"Price ({currency})"
-        },
-        title="Flight Duration vs Price Scatter Plot"
-    )
-    st.plotly_chart(fig4, use_container_width=True)
+# ✅ Flight Duration vs Price chart has been completely removed!
