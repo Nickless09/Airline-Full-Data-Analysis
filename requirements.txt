@@ -5,3 +5,4 @@ statsmodels
 matplotlib
 seaborn
 hvplot.pandas
+pip install --upgrade pip
