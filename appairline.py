@@ -220,33 +220,30 @@ if duration_col:
     with st.expander(f"Show {chart_type}"):
         st.plotly_chart(fig3, use_container_width=True)
 
-# Heatmap of Average Price by Route
-if price_to_use and duration_col and not filtered_df.empty:
-    with st.expander("Show Flight Duration vs Price Density Heatmap"):
-        st.subheader(f"Flight Duration vs Price Density Heatmap ({currency})")
+# --- Heatmap using px.imshow ---
+if price_to_use and not filtered_df.empty:
+    st.subheader("Average Price Heatmap (Source vs Destination)")
 
-        # Compute 2D histogram manually for better color scaling
-        import numpy as np
+    # Compute average price per route
+    route_avg = filtered_df.groupby([source_col, dest_col])[price_to_use].mean().reset_index()
 
-        x = filtered_df[duration_col].values
-        y = filtered_df[price_to_use].values
+    if not route_avg.empty:
+        # Pivot table: rows=destination, cols=source, values=average price
+        heatmap_data = route_avg.pivot(index=dest_col, columns=source_col, values=price_to_use).fillna(0)
 
-        # Define number of bins
-        nbins_x = 100
-        nbins_y = 100
-
-        # Compute 2D histogram
-        hist, xedges, yedges = np.histogram2d(x, y, bins=[nbins_x, nbins_y])
-
-        # Plot heatmap with actual counts
-        fig3 = px.imshow(
-            hist.T,  # transpose to match orientation
-            x=xedges,
-            y=yedges,
-            origin='lower',
-            color_continuous_scale="Viridis",
-            labels={'x': 'Duration (hours)', 'y': f'Price ({currency})', 'color': 'Count'},
-            title=f"Flight Duration vs Price Density Heatmap ({currency})"
+        fig_heatmap = px.imshow(
+            heatmap_data,
+            text_auto=True,  # shows numbers in each cell
+            color_continuous_scale=px.colors.sequential.Reds,
+            aspect="auto",
+            labels={
+                "x": "Source City",
+                "y": "Destination City",
+                "color": f"Price ({currency})"
+            },
+            title=f"Heatmap of Average Flight Prices by Route ({currency})"
         )
 
-        st.plotly_chart(fig3, use_container_width=True)
+        st.plotly_chart(fig_heatmap, use_container_width=True)
+    else:
+        st.info("No route data available to display heatmap.")
