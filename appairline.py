@@ -225,14 +225,27 @@ if price_to_use and duration_col and not filtered_df.empty:
     with st.expander("Show Flight Duration vs Price Density Heatmap"):
         st.subheader(f"Flight Duration vs Price Density Heatmap ({currency})")
 
-        fig3 = px.density_heatmap(
-            filtered_df,
-            x=duration_col,
-            y=price_to_use,
-            nbinsx=100,  # number of bins along X
-            nbinsy=100,  # number of bins along Y
+        # Compute 2D histogram manually for better color scaling
+        import numpy as np
+
+        x = filtered_df[duration_col].values
+        y = filtered_df[price_to_use].values
+
+        # Define number of bins
+        nbins_x = 100
+        nbins_y = 100
+
+        # Compute 2D histogram
+        hist, xedges, yedges = np.histogram2d(x, y, bins=[nbins_x, nbins_y])
+
+        # Plot heatmap with actual counts
+        fig3 = px.imshow(
+            hist.T,  # transpose to match orientation
+            x=xedges,
+            y=yedges,
+            origin='lower',
             color_continuous_scale="Viridis",
-            labels=label_map,
+            labels={'x': 'Duration (hours)', 'y': f'Price ({currency})', 'color': 'Count'},
             title=f"Flight Duration vs Price Density Heatmap ({currency})"
         )
 
