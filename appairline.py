@@ -221,18 +221,33 @@ if duration_col:
         st.plotly_chart(fig3, use_container_width=True)
 
 # Heatmap of Average Price by Route
-st.subheader("Average Price Heatmap (Source vs Destination)")
-route_avg = filtered_df.groupby([source_col, dest_col])[price_to_use].mean().reset_index()
-if not route_avg.empty:
-    heatmap_data = route_avg.pivot(index=dest_col, columns=source_col, values=price_to_use).fillna(0)
-    fig_heatmap = px.imshow(
-        heatmap_data,
-        text_auto=True,
-        color_continuous_scale=px.colors.sequential.Reds,
-        aspect="auto",
-        labels={"x": "Source City", "y": "Destination City", "color": f"Price ({currency})"},
-        title=f"Heatmap of Average Flight Prices by Route ({currency})"
-    )
-    st.plotly_chart(fig_heatmap, use_container_width=True)
-else:
-    st.info("No route data available to display heatmap.")
+if price_to_use and duration_col and not filtered_df.empty:
+    # Automatically choose chart type based on dataset size
+    n_points = len(filtered_df)
+
+    if n_points < 10000:
+        chart_type = "Scatter Plot"
+        fig3 = px.scatter(
+            filtered_df,
+            x=duration_col,
+            y=price_to_use,
+            color=class_col if class_col else None,
+            title=f"Flight Duration vs Price ({currency})" + (" (by Class)" if class_col else ""),
+            labels=label_map
+        )
+    else:
+        chart_type = "Density Heatmap"
+        fig3 = px.density_heatmap(
+            filtered_df,
+            x=duration_col,
+            y=price_to_use,
+            nbinsx=100,
+            nbinsy=100,
+            color_continuous_scale="Viridis",
+            histfunc="count",
+            labels=label_map,
+            title=f"Flight Duration vs Price Density Heatmap ({currency})"
+        )
+
+    with st.expander(f"Show {chart_type}"):
+        st.plotly_chart(fig3, use_container_width=True)
