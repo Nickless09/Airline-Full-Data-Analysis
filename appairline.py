@@ -229,8 +229,9 @@ if price_to_use and duration_col and not filtered_df.empty:
             x=duration_col,
             y=price_to_use,
             color=class_col if class_col else None,
-            opacity=0.6,  # makes overlapping points visible
             title=f"Flight Duration vs Price ({currency})" + (" (by Class)" if class_col else ""),
-            labels=label_map
+            labels=label_map,
+            size_max=5,   # small points
         )
+        fig3.update_traces(marker=dict(size=3, opacity=0.5))  # many small round points
         st.plotly_chart(fig3, use_container_width=True)
