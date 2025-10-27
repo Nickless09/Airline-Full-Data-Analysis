@@ -88,6 +88,7 @@ else:  # "All Flights" = Economy + Business
 # Stop execution if dataframe is empty
 if df.empty:
     st.stop()
+
 # ------------------- Detect columns -------------------
 airline_col = get_col(df, "airline", "carrier")
 source_col = get_col(df, "source_city", "source", "from")
@@ -152,7 +153,7 @@ else:
 if filtered_df.empty:
     st.warning("⚠️ No flights match the selected filters. Please adjust your selections.")
     st.stop()  # stop execution so no charts or KPIs are shown
-    
+
 # ------------------- Dashboard -------------------
 st.markdown(
     "<h1 style='text-align: center;'>✈️ Airline Fare Dashboard</h1>", 
@@ -167,10 +168,7 @@ min_price = round(filtered_df[price_to_use].min(), 2) if price_to_use and not fi
 max_price = round(filtered_df[price_to_use].max(), 2) if price_to_use and not filtered_df.empty else 0
 
 col1, col2, col3, col4, col5 = st.columns(5)
-
-# Format total flights with dot as thousands separator
-total_flights_formatted = f"{total_flights:,}".replace(",", ".")  
-
+total_flights_formatted = f"{total_flights:,}".replace(",", ".")  # format with dot
 col1.metric("Total Flights", total_flights_formatted)
 col2.metric(f"Average Price ({currency})", avg_price)
 col3.metric("Average Duration (hours)", avg_duration)
@@ -216,33 +214,19 @@ if price_to_use and days_left_col and not filtered_df.empty:
     )
     st.plotly_chart(fig2, use_container_width=True)
 
-# if price_to_use and duration_col and not filtered_df.empty:
-#     st.subheader(f"Flight Duration vs. Price ({currency})")
-#     fig3 = px.scatter(
-#         filtered_df, x=duration_col, y=price_to_use, color=class_col if class_col else None,
-#         title=f"Flight Duration vs Price ({currency})" + (" (by Class)" if class_col else ""),
-#         labels=label_map
-#     )
-#     st.plotly_chart(fig3, use_container_width=True)
-
-# # Make sure your filtered_df is ready
-# # filtered_df should have columns: duration_col, price_to_use
-
-# if duration_col and price_to_use and not filtered_df.empty:
-#     with st.expander("Show Flight Duration vs Price Scatter Plot"):
-#         st.subheader("Flight Duration vs Price")
-
-#         fig = px.scatter(
-#             filtered_df,
-#             x=duration_col,
-#             y=price_to_use,
-#             color=None,  # optional: you can color by class or airline
-#             opacity=0.5,  # makes dense regions visible
-#             labels={
-#                 duration_col: "Duration (hours)",
-#                 price_to_use: f"Price ({currency})"
-#             },
-#             title="Flight Duration vs Price Scatter Plot"
-#         )
-
-#         st.plotly_chart(fig, use_container_width=True)
+# --- Flight Duration vs Price Scatter Plot ---
+if duration_col and price_to_use and not filtered_df.empty:
+    st.subheader(f"Flight Duration vs Price ({currency})")
+    fig3 = px.scatter(
+        filtered_df,
+        x=duration_col,
+        y=price_to_use,
+        color=class_col if class_col else None,  # optional
+        opacity=0.5,  # helps see dense areas
+        labels={
+            duration_col: "Duration (hours)",
+            price_to_use: f"Price ({currency})"
+        },
+        title="Flight Duration vs Price Scatter Plot"
+    )
+    st.plotly_chart(fig3, use_container_width=True)
