@@ -9,5 +9,5 @@ holoviews>=1.18.0
 hvplot>=0.10.0
 datashader>=0.16.0
 bokeh>=3.4.0
-import hvplot.pandas  # enables df.hvplot()
-import holoviews as hv
+hvplot.pandas
+holoviews as hv
