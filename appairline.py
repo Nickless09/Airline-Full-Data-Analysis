@@ -273,18 +273,15 @@ if price_to_use and not filtered_df.empty:
 #         )
 #         st.plotly_chart(fig3, use_container_width=True)
 
-if price_to_use and duration_col and not filtered_df.empty:
-    with st.expander("Show Flight Duration vs Price Hexbin Plot"):
-        st.subheader(f"Flight Duration vs Price Hexbin ({currency})")
-        fig, ax = plt.subplots(figsize=(8, 6))
-        hb = ax.hexbin(
-            filtered_df[duration_col],
-            filtered_df[price_to_use],
-            gridsize=50,  # Adjust for resolution
-            cmap="viridis",
-            bins='log'
-        )
-        plt.colorbar(hb, ax=ax, label='log10(N)')
-        ax.set_xlabel(label_map.get(duration_col, duration_col))
-        ax.set_ylabel(label_map.get(price_to_use, price_to_use))
-        st.pyplot(fig)
+import hvplot.pandas  # pip install hvplot
+
+plot = filtered_df.hvplot.hexbin(
+    x=duration_col,
+    y=price_to_use,
+    gridsize=50,
+    cmap='Viridis',
+    logz=True,
+    width=800,
+    height=600
+)
+st.bokeh_chart(hv.render(plot))
