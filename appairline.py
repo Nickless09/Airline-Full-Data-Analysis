@@ -155,7 +155,7 @@ if filtered_df.empty:
     
 # ------------------- Dashboard -------------------
 st.markdown(
-    "<h1 style='text-align: center;'>✈️ Airline Fare Dashboard</h1>", 
+    "<h1 style='text-align: center;'>✈️ Airline Fare in India Dashboard</h1>", 
     unsafe_allow_html=True)
 st.markdown(f"Currently viewing **{dataset_choice}** dataset.")
 
