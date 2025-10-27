@@ -221,11 +221,21 @@ if duration_col:
         st.plotly_chart(fig3, use_container_width=True)
 
 # Heatmap of Average Price by Route
-
 if price_to_use and duration_col and not filtered_df.empty:
-    st.subheader(f"Flight Duration vs. Price ({currency})")
-    fig3 = px.scatter(
-        filtered_df, x=duration_col, y=price_to_use, color=class_col if class_col else None,
-        title=f"Flight Duration vs Price ({currency})" + (" (by Class)" if class_col else "")
-    )
-    st.plotly_chart(fig3, use_container_width=True)
+    with st.expander("Show Flight Duration vs Price Chart"):
+        st.subheader(f"Flight Duration vs Price ({currency})")
+
+        # Use Plotly scatter for large datasets
+        fig3 = px.scatter(
+            filtered_df,
+            x=duration_col,
+            y=price_to_use,
+            color=class_col if class_col else None,  # optional coloring by class
+            labels=label_map,
+            title=f"Flight Duration vs Price ({currency})" + (" (by Class)" if class_col else ""),
+        )
+
+        # Small round points and semi-transparent for overlapping
+        fig3.update_traces(marker=dict(size=3, symbol='circle', opacity=0.4))
+
+        st.plotly_chart(fig3, use_container_width=True)
