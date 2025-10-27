@@ -1,13 +1,12 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import matplotlib.pyplot as plt
 import re
 import os
-import seaborn as sns
 
 # ------------------- Paths -------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CLEAN_FILE = os.path.join(BASE_DIR, "dat", "Clean_Dataset.csv")
 ECONOMY_FILE = os.path.join(BASE_DIR, "dat", "economy.csv")
 BUSINESS_FILE = os.path.join(BASE_DIR, "dat", "business.csv")
 
@@ -16,14 +15,24 @@ st.set_page_config(page_title="Airline Data Dashboard", layout="wide")
 # ------------------- Load CSV -------------------
 @st.cache_data
 def load_data(file_path):
-    if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
+    """Load CSV safely with error handling"""
+    if not os.path.exists(file_path):
+        st.error(f"File not found: {file_path}")
         return pd.DataFrame()
-    df = pd.read_csv(file_path)
-    df.columns = [c.strip().lower() for c in df.columns]  # normalize column names
-    return df
+    if os.path.getsize(file_path) == 0:
+        st.error(f"File is empty: {file_path}")
+        return pd.DataFrame()
+    try:
+        df = pd.read_csv(file_path)
+        df.columns = [c.strip().lower() for c in df.columns]  # normalize column names
+        return df
+    except Exception as e:
+        st.error(f"Error loading {file_path}: {e}")
+        return pd.DataFrame()
 
 # ------------------- Duration Parser -------------------
 def parse_duration(x):
+    """Converts duration strings to hours (float)"""
     x = str(x).strip()
     if not x or x.lower() in ['nan', 'none']:
         return None
@@ -43,7 +52,7 @@ def parse_duration(x):
                 return None
     try:
         val = float(re.sub(r'[^\d.]', '', x))
-        if val > 10:  # assume minutes
+        if val > 10:
             return val / 60
         return val
     except:
@@ -51,6 +60,7 @@ def parse_duration(x):
 
 # ------------------- Column Detection -------------------
 def get_col(df, *names):
+    """Return first matching column name"""
     for n in names:
         if n in df.columns:
             return n
@@ -72,13 +82,12 @@ if dataset_choice == "Economy":
     df = df_econ.copy()
 elif dataset_choice == "Business":
     df = df_bus.copy()
-else:
+else:  # "All Flights" = Economy + Business
     df = pd.concat([df_econ, df_bus], ignore_index=True)
 
+# Stop execution if dataframe is empty
 if df.empty:
-    st.warning("No data available.")
     st.stop()
-
 # ------------------- Detect columns -------------------
 airline_col = get_col(df, "airline", "carrier")
 source_col = get_col(df, "source_city", "source", "from")
@@ -98,25 +107,36 @@ if duration_col and duration_col in df.columns:
     df[duration_col] = df[duration_col].apply(parse_duration)
 
 # ------------------- Currency Conversion -------------------
-currency = st.sidebar.selectbox("Select Currency", ["INR", "USD", "EUR"])
-rates = {"INR": 1, "USD": 0.012, "EUR": 0.011}
+currency = st.sidebar.selectbox(
+    "Select Currency",
+    ["INR", "USD", "EUR"]
+)
+rates = {"INR": 1, "USD": 0.012, "EUR": 0.011}  # example rates
 conversion_rate = rates[currency]
 
 # ------------------- Sidebar Filters -------------------
-airlines = st.sidebar.multiselect("Select Airline(s)", df[airline_col].unique(), default=df[airline_col].unique())
-sources = st.sidebar.multiselect("Select Source City", df[source_col].unique(), default=df[source_col].unique())
-destinations = st.sidebar.multiselect("Select Destination City", df[dest_col].unique(), default=df[dest_col].unique())
-
-classes = None
+airlines = st.sidebar.multiselect(
+    "Select Airline(s)", df[airline_col].unique(), default=df[airline_col].unique()
+)
+sources = st.sidebar.multiselect(
+    "Select Source City", df[source_col].unique(), default=df[source_col].unique()
+)
+destinations = st.sidebar.multiselect(
+    "Select Destination City", df[dest_col].unique(), default=df[dest_col].unique()
+)
 if class_col:
-    classes = st.sidebar.multiselect("Select Class", df[class_col].unique(), default=df[class_col].unique())
+    classes = st.sidebar.multiselect(
+        "Select Class", df[class_col].unique(), default=df[class_col].unique()
+    )
+else:
+    classes = None
 
 # ------------------- Apply Filters -------------------
 filtered_df = df[
     (df[airline_col].isin(airlines)) &
     (df[source_col].isin(sources)) &
     (df[dest_col].isin(destinations))
-]
+].copy()
 
 if class_col and classes is not None:
     filtered_df = filtered_df[filtered_df[class_col].isin(classes)]
@@ -128,27 +148,34 @@ if price_col:
 else:
     price_to_use = price_col
 
+# ------------------- Handle Empty Filter -------------------
 if filtered_df.empty:
-    st.warning("⚠️ No flights match the selected filters.")
-    st.stop()
-
+    st.warning("⚠️ No flights match the selected filters. Please adjust your selections.")
+    st.stop()  # stop execution so no charts or KPIs are shown
+    
 # ------------------- Dashboard -------------------
-st.markdown("<h1 style='text-align: center;'>✈️ Airline Fare Dashboard</h1>", unsafe_allow_html=True)
+st.markdown(
+    "<h1 style='text-align: center;'>✈️ Airline Fare Dashboard</h1>", 
+    unsafe_allow_html=True)
 st.markdown(f"Currently viewing **{dataset_choice}** dataset.")
 
 # --- KPIs ---
-avg_price = round(filtered_df[price_to_use].mean(), 2)
-avg_duration = round(filtered_df[duration_col].mean(), 2)
+avg_price = round(filtered_df[price_to_use].mean(), 2) if price_to_use and not filtered_df.empty else 0
+avg_duration = round(filtered_df[duration_col].mean(), 2) if duration_col and not filtered_df.empty else 0
 total_flights = len(filtered_df)
-min_price = round(filtered_df[price_to_use].min(), 2)
-max_price = round(filtered_df[price_to_use].max(), 2)
+min_price = round(filtered_df[price_to_use].min(), 2) if price_to_use and not filtered_df.empty else 0
+max_price = round(filtered_df[price_to_use].max(), 2) if price_to_use and not filtered_df.empty else 0
 
 col1, col2, col3, col4, col5 = st.columns(5)
-col1.metric("Total Flights", f"{total_flights:,}".replace(",", "."))
-col2.metric(f"Average Price ({currency})", f"{avg_price:,.2f}")
+
+# Format total flights with dot as thousands separator
+total_flights_formatted = f"{total_flights:,}".replace(",", ".")  
+
+col1.metric("Total Flights", total_flights_formatted)
+col2.metric(f"Average Price ({currency})", avg_price)
 col3.metric("Average Duration (hours)", avg_duration)
-col4.metric(f"Cheapest Flight ({currency})", f"{min_price:,.2f}")
-col5.metric(f"Most Expensive Flight ({currency})", f"{max_price:,.2f}")
+col4.metric(f"Cheapest Flight ({currency})", min_price)
+col5.metric(f"Most Expensive Flight ({currency})", max_price)
 
 # --- Charts ---
 label_map = {
@@ -161,28 +188,26 @@ label_map = {
     class_col: "Class"
 }
 
-# Average Price by Airline
-st.subheader(f"Average Price by Airline ({currency})")
-fig1 = px.bar(
-    filtered_df.groupby(airline_col)[price_to_use].mean().reset_index(),
-    x=airline_col, y=price_to_use, color=airline_col,
-    title=f"Average Price per Airline ({currency})",
-    labels=label_map
-)
-st.plotly_chart(fig1, use_container_width=True)
+if price_to_use and not filtered_df.empty:
+    st.subheader(f"Average Price by Airline ({currency})")
+    fig1 = px.bar(
+        filtered_df.groupby(airline_col)[price_to_use].mean().reset_index(),
+        x=airline_col, y=price_to_use, color=airline_col,
+        title=f"Average Price per Airline ({currency})",
+        labels=label_map
+    )
+    st.plotly_chart(fig1, use_container_width=True)
 
-# Average Price by Route
-st.subheader(f"Average Price by Source-Destination Route ({currency})")
-route_df = filtered_df.groupby([source_col, dest_col])[price_to_use].mean().reset_index()
-fig4 = px.bar(
-    route_df, x=source_col, y=price_to_use, color=dest_col,
-    title=f"Average Price by Route ({currency})", barmode="group",
-    labels=label_map
-)
-st.plotly_chart(fig4, use_container_width=True)
+    st.subheader(f"Average Price by Source-Destination Route ({currency})")
+    route_df = filtered_df.groupby([source_col, dest_col])[price_to_use].mean().reset_index()
+    fig4 = px.bar(
+        route_df, x=source_col, y=price_to_use, color=dest_col,
+        title=f"Average Price by Route ({currency})", barmode="group",
+        labels=label_map
+    )
+    st.plotly_chart(fig4, use_container_width=True)
 
-# Price vs Days Left
-if days_left_col:
+if price_to_use and days_left_col and not filtered_df.empty:
     st.subheader(f"Price vs. Days Left ({currency})")
     fig2 = px.scatter(
         filtered_df, x=days_left_col, y=price_to_use, color=airline_col,
@@ -191,34 +216,14 @@ if days_left_col:
     )
     st.plotly_chart(fig2, use_container_width=True)
 
-# Flight Duration vs Price (scatter or heatmap based on dataset size)
-if duration_col:
-    n_points = len(filtered_df)
-    if n_points < 10000:
-        chart_type = "Scatter Plot"
-        fig3 = px.scatter(
-            filtered_df,
-            x=duration_col,
-            y=price_to_use,
-            color=class_col if class_col else None,
-            title=f"Flight Duration vs Price ({currency})" + (" (by Class)" if class_col else ""),
-            labels=label_map
-        )
-    else:
-        chart_type = "Density Heatmap"
-        fig3 = px.density_heatmap(
-            filtered_df,
-            x=duration_col,
-            y=price_to_use,
-            nbinsx=100,
-            nbinsy=100,
-            color_continuous_scale="Viridis",
-            labels=label_map,
-            title=f"Flight Duration vs Price Density Heatmap ({currency})"
-        )
-
-    with st.expander(f"Show {chart_type}"):
-        st.plotly_chart(fig3, use_container_width=True)
+if price_to_use and duration_col and not filtered_df.empty:
+    st.subheader(f"Flight Duration vs. Price ({currency})")
+    fig3 = px.scatter(
+        filtered_df, x=duration_col, y=price_to_use, color=class_col if class_col else None,
+        title=f"Flight Duration vs Price ({currency})" + (" (by Class)" if class_col else ""),
+        labels=label_map
+    )
+    st.plotly_chart(fig3, use_container_width=True)
 
 # --- Heatmap using px.imshow ---
 if price_to_use and not filtered_df.empty:
