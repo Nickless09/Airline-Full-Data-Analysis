@@ -4,3 +4,4 @@ streamlit
 statsmodels
 matplotlib
 seaborn
+hvplot.pandas
