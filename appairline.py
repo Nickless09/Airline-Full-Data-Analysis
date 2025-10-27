@@ -271,14 +271,18 @@ if price_to_use and not filtered_df.empty:
 #         )
 #         st.plotly_chart(fig3, use_container_width=True)
 
-fig3 = px.density_heatmap(
-    filtered_df,
-    x=duration_col,
-    y=price_to_use,
-    nbinsx=100,
-    nbinsy=100,
-    color_continuous_scale="Viridis",
-    histfunc="count",
-    labels=label_map,
-    title=f"Flight Duration vs Price Density Heatmap ({currency})"
-)
+if price_to_use and duration_col and not filtered_df.empty:
+    with st.expander("Show Flight Duration vs Price Heatmap"):
+        st.subheader(f"Flight Duration vs. Price Density Heatmap ({currency})")
+        fig3 = px.density_heatmap(
+            filtered_df,
+            x=duration_col,
+            y=price_to_use,
+            nbinsx=100,  # adjust resolution
+            nbinsy=100,
+            color_continuous_scale="Viridis",
+            histfunc="count",
+            labels=label_map,
+            title=f"Flight Duration vs Price Density Heatmap ({currency})"
+        )
+        st.plotly_chart(fig3, use_container_width=True)
