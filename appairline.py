@@ -247,11 +247,15 @@ if price_to_use and not filtered_df.empty:
         st.info("No route data available to display heatmap.")
 
 
+# --- Flight Duration vs Price (hidden by default) ---
 if price_to_use and duration_col and not filtered_df.empty:
-    st.subheader(f"Flight Duration vs. Price ({currency})")
-    fig3 = px.scatter(
-        filtered_df, x=duration_col, y=price_to_use, color=class_col if class_col else None,
-        title=f"Flight Duration vs Price ({currency})" + (" (by Class)" if class_col else ""),
-        labels=label_map
-    )
-    st.plotly_chart(fig3, use_container_width=True)
+    with st.expander(f"Show Flight Duration vs Price ({currency})"):
+        fig3 = px.scatter(
+            filtered_df, 
+            x=duration_col, 
+            y=price_to_use, 
+            color=class_col if class_col else None,
+            title=f"Flight Duration vs Price ({currency})" + (" (by Class)" if class_col else ""),
+            labels=label_map
+        )
+        st.plotly_chart(fig3, use_container_width=True)
