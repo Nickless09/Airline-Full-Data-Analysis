@@ -221,18 +221,15 @@ if duration_col:
         st.plotly_chart(fig3, use_container_width=True)
 
 # Heatmap of Average Price by Route
-if price_to_use and days_left_col and not filtered_df.empty:
-    st.subheader(f"Price vs. Days Left ({currency})")
-    fig2 = px.scatter(
-        filtered_df, x=days_left_col, y=price_to_use, color=airline_col,
-        trendline="ols", title=f"Price vs Days Left by Airline ({currency})"
-    )
-    st.plotly_chart(fig2, use_container_width=True)
-
 if price_to_use and duration_col and not filtered_df.empty:
-    st.subheader(f"Flight Duration vs. Price ({currency})")
-    fig3 = px.scatter(
-        filtered_df, x=duration_col, y=price_to_use, color=class_col if class_col else None,
-        title=f"Flight Duration vs Price ({currency})" + (" (by Class)" if class_col else "")
-    )
-    st.plotly_chart(fig3, use_container_width=True)
+    with st.expander("Show Flight Duration vs Price Chart"):
+        st.subheader(f"Flight Duration vs Price ({currency})")
+        fig3 = px.scatter(
+            filtered_df,
+            x=duration_col,
+            y=price_to_use,
+            color=class_col if class_col else None,
+            title=f"Flight Duration vs Price ({currency})" + (" (by Class)" if class_col else ""),
+            labels=label_map
+        )
+        st.plotly_chart(fig3, use_container_width=True)
