@@ -221,33 +221,18 @@ if duration_col:
         st.plotly_chart(fig3, use_container_width=True)
 
 # Heatmap of Average Price by Route
+if price_to_use and days_left_col and not filtered_df.empty:
+    st.subheader(f"Price vs. Days Left ({currency})")
+    fig2 = px.scatter(
+        filtered_df, x=days_left_col, y=price_to_use, color=airline_col,
+        trendline="ols", title=f"Price vs Days Left by Airline ({currency})"
+    )
+    st.plotly_chart(fig2, use_container_width=True)
+
 if price_to_use and duration_col and not filtered_df.empty:
-    # Automatically choose chart type based on dataset size
-    n_points = len(filtered_df)
-
-    if n_points < 10000:
-        chart_type = "Scatter Plot"
-        fig3 = px.scatter(
-            filtered_df,
-            x=duration_col,
-            y=price_to_use,
-            color=class_col if class_col else None,
-            title=f"Flight Duration vs Price ({currency})" + (" (by Class)" if class_col else ""),
-            labels=label_map
-        )
-    else:
-        chart_type = "Density Heatmap"
-        fig3 = px.density_heatmap(
-            filtered_df,
-            x=duration_col,
-            y=price_to_use,
-            nbinsx=100,
-            nbinsy=100,
-            color_continuous_scale="Viridis",
-            histfunc="count",
-            labels=label_map,
-            title=f"Flight Duration vs Price Density Heatmap ({currency})"
-        )
-
-    with st.expander(f"Show {chart_type}"):
-        st.plotly_chart(fig3, use_container_width=True)
+    st.subheader(f"Flight Duration vs. Price ({currency})")
+    fig3 = px.scatter(
+        filtered_df, x=duration_col, y=price_to_use, color=class_col if class_col else None,
+        title=f"Flight Duration vs Price ({currency})" + (" (by Class)" if class_col else "")
+    )
+    st.plotly_chart(fig3, use_container_width=True)
