@@ -225,30 +225,24 @@ if price_to_use and duration_col and not filtered_df.empty:
     )
     st.plotly_chart(fig3, use_container_width=True)
 
-# --- Heatmap using px.imshow ---
-if price_to_use and not filtered_df.empty:
-    st.subheader("Average Price Heatmap (Source vs Destination)")
+# Make sure your filtered_df is ready
+# filtered_df should have columns: duration_col, price_to_use
 
-    # Compute average price per route
-    route_avg = filtered_df.groupby([source_col, dest_col])[price_to_use].mean().reset_index()
+if duration_col and price_to_use and not filtered_df.empty:
+    with st.expander("Show Flight Duration vs Price Scatter Plot"):
+        st.subheader("Flight Duration vs Price")
 
-    if not route_avg.empty:
-        # Pivot table: rows=destination, cols=source, values=average price
-        heatmap_data = route_avg.pivot(index=dest_col, columns=source_col, values=price_to_use).fillna(0)
-
-        fig_heatmap = px.imshow(
-            heatmap_data,
-            text_auto=True,  # shows numbers in each cell
-            color_continuous_scale=px.colors.sequential.Reds,
-            aspect="auto",
+        fig = px.scatter(
+            filtered_df,
+            x=duration_col,
+            y=price_to_use,
+            color=None,  # optional: you can color by class or airline
+            opacity=0.5,  # makes dense regions visible
             labels={
-                "x": "Source City",
-                "y": "Destination City",
-                "color": f"Price ({currency})"
+                duration_col: "Duration (hours)",
+                price_to_use: f"Price ({currency})"
             },
-            title=f"Heatmap of Average Flight Prices by Route ({currency})"
+            title="Flight Duration vs Price Scatter Plot"
         )
 
-        st.plotly_chart(fig_heatmap, use_container_width=True)
-    else:
-        st.info("No route data available to display heatmap.")
+        st.plotly_chart(fig, use_container_width=True)
