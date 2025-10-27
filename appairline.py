@@ -15,7 +15,6 @@ st.set_page_config(page_title="Airline Data Dashboard", layout="wide")
 # ------------------- Load CSV -------------------
 @st.cache_data
 def load_data(file_path):
-    """Load CSV safely with error handling"""
     if not os.path.exists(file_path):
         st.error(f"File not found: {file_path}")
         return pd.DataFrame()
@@ -24,7 +23,7 @@ def load_data(file_path):
         return pd.DataFrame()
     try:
         df = pd.read_csv(file_path)
-        df.columns = [c.strip().lower() for c in df.columns]  # normalize column names
+        df.columns = [c.strip().lower() for c in df.columns]
         return df
     except Exception as e:
         st.error(f"Error loading {file_path}: {e}")
@@ -32,7 +31,6 @@ def load_data(file_path):
 
 # ------------------- Duration Parser -------------------
 def parse_duration(x):
-    """Converts duration strings to hours (float)"""
     x = str(x).strip()
     if not x or x.lower() in ['nan', 'none']:
         return None
@@ -60,7 +58,6 @@ def parse_duration(x):
 
 # ------------------- Column Detection -------------------
 def get_col(df, *names):
-    """Return first matching column name"""
     for n in names:
         if n in df.columns:
             return n
@@ -73,19 +70,16 @@ dataset_choice = st.sidebar.radio(
     ["All Flights", "Economy", "Business"]
 )
 
-# Load individual datasets
 df_econ = load_data(ECONOMY_FILE)
 df_bus = load_data(BUSINESS_FILE)
 
-# Choose dataset based on selection
 if dataset_choice == "Economy":
     df = df_econ.copy()
 elif dataset_choice == "Business":
     df = df_bus.copy()
-else:  # "All Flights" = Economy + Business
+else:
     df = pd.concat([df_econ, df_bus], ignore_index=True)
 
-# Stop execution if dataframe is empty
 if df.empty:
     st.stop()
 
@@ -112,7 +106,7 @@ currency = st.sidebar.selectbox(
     "Select Currency",
     ["INR", "USD", "EUR"]
 )
-rates = {"INR": 1, "USD": 0.012, "EUR": 0.011}  # example rates
+rates = {"INR": 1, "USD": 0.012, "EUR": 0.011}
 conversion_rate = rates[currency]
 
 # ------------------- Sidebar Filters -------------------
@@ -142,22 +136,21 @@ filtered_df = df[
 if class_col and classes is not None:
     filtered_df = filtered_df[filtered_df[class_col].isin(classes)]
 
-# Convert prices
 if price_col:
     filtered_df["converted_price"] = filtered_df[price_col] * conversion_rate
     price_to_use = "converted_price"
 else:
     price_to_use = price_col
 
-# ------------------- Handle Empty Filter -------------------
 if filtered_df.empty:
     st.warning("⚠️ No flights match the selected filters. Please adjust your selections.")
-    st.stop()  # stop execution so no charts or KPIs are shown
+    st.stop()
 
 # ------------------- Dashboard -------------------
 st.markdown(
     "<h1 style='text-align: center;'>✈️ Airline Fare Dashboard</h1>", 
-    unsafe_allow_html=True)
+    unsafe_allow_html=True
+)
 st.markdown(f"Currently viewing **{dataset_choice}** dataset.")
 
 # --- KPIs ---
@@ -168,7 +161,8 @@ min_price = round(filtered_df[price_to_use].min(), 2) if price_to_use and not fi
 max_price = round(filtered_df[price_to_use].max(), 2) if price_to_use and not filtered_df.empty else 0
 
 col1, col2, col3, col4, col5 = st.columns(5)
-total_flights_formatted = f"{total_flights:,}".replace(",", ".")  # format with dot
+total_flights_formatted = f"{total_flights:,}".replace(",", ".")  
+
 col1.metric("Total Flights", total_flights_formatted)
 col2.metric(f"Average Price ({currency})", avg_price)
 col3.metric("Average Duration (hours)", avg_duration)
@@ -186,6 +180,7 @@ label_map = {
     class_col: "Class"
 }
 
+# Average Price by Airline
 if price_to_use and not filtered_df.empty:
     st.subheader(f"Average Price by Airline ({currency})")
     fig1 = px.bar(
@@ -196,37 +191,40 @@ if price_to_use and not filtered_df.empty:
     )
     st.plotly_chart(fig1, use_container_width=True)
 
+# Average Price by Route
+if price_to_use and not filtered_df.empty:
     st.subheader(f"Average Price by Source-Destination Route ({currency})")
     route_df = filtered_df.groupby([source_col, dest_col])[price_to_use].mean().reset_index()
-    fig4 = px.bar(
+    fig2 = px.bar(
         route_df, x=source_col, y=price_to_use, color=dest_col,
         title=f"Average Price by Route ({currency})", barmode="group",
         labels=label_map
     )
-    st.plotly_chart(fig4, use_container_width=True)
+    st.plotly_chart(fig2, use_container_width=True)
 
+# Price vs Days Left
 if price_to_use and days_left_col and not filtered_df.empty:
     st.subheader(f"Price vs. Days Left ({currency})")
-    fig2 = px.scatter(
+    fig3 = px.scatter(
         filtered_df, x=days_left_col, y=price_to_use, color=airline_col,
         trendline="ols", title=f"Price vs Days Left by Airline ({currency})",
         labels=label_map
     )
-    st.plotly_chart(fig2, use_container_width=True)
+    st.plotly_chart(fig3, use_container_width=True)
 
-# --- Flight Duration vs Price Scatter Plot ---
+# --- Flight Duration vs Price Scatter Plot ONLY ---
 if duration_col and price_to_use and not filtered_df.empty:
     st.subheader(f"Flight Duration vs Price ({currency})")
-    fig3 = px.scatter(
+    fig4 = px.scatter(
         filtered_df,
         x=duration_col,
         y=price_to_use,
-        color=class_col if class_col else None,  # optional
-        opacity=0.5,  # helps see dense areas
+        color=class_col if class_col else None,
+        opacity=0.5,
         labels={
             duration_col: "Duration (hours)",
             price_to_use: f"Price ({currency})"
         },
         title="Flight Duration vs Price Scatter Plot"
     )
-    st.plotly_chart(fig3, use_container_width=True)
+    st.plotly_chart(fig4, use_container_width=True)
