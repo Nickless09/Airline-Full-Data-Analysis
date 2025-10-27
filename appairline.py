@@ -1,8 +1,10 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import matplotlib.pyplot as plt
 import re
 import os
+import seaborn as sns
 
 # ------------------- Paths -------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -272,17 +274,17 @@ if price_to_use and not filtered_df.empty:
 #         st.plotly_chart(fig3, use_container_width=True)
 
 if price_to_use and duration_col and not filtered_df.empty:
-    with st.expander("Show Flight Duration vs Price Heatmap"):
-        st.subheader(f"Flight Duration vs. Price Density Heatmap ({currency})")
-        fig3 = px.density_heatmap(
-            filtered_df,
-            x=duration_col,
-            y=price_to_use,
-            nbinsx=100,  # adjust resolution
-            nbinsy=100,
-            color_continuous_scale="Viridis",
-            histfunc="count",
-            labels=label_map,
-            title=f"Flight Duration vs Price Density Heatmap ({currency})"
+    with st.expander("Show Flight Duration vs Price Hexbin Plot"):
+        st.subheader(f"Flight Duration vs Price Hexbin ({currency})")
+        fig, ax = plt.subplots(figsize=(8, 6))
+        hb = ax.hexbin(
+            filtered_df[duration_col],
+            filtered_df[price_to_use],
+            gridsize=50,  # Adjust for resolution
+            cmap="viridis",
+            bins='log'
         )
-        st.plotly_chart(fig3, use_container_width=True)
+        plt.colorbar(hb, ax=ax, label='log10(N)')
+        ax.set_xlabel(label_map.get(duration_col, duration_col))
+        ax.set_ylabel(label_map.get(price_to_use, price_to_use))
+        st.pyplot(fig)
