@@ -222,20 +222,18 @@ if duration_col:
 
 # Heatmap of Average Price by Route
 if price_to_use and duration_col and not filtered_df.empty:
-    with st.expander("Show Flight Duration vs Price Chart"):
-        st.subheader(f"Flight Duration vs Price ({currency})")
+    with st.expander("Show Flight Duration vs Price Density Heatmap"):
+        st.subheader(f"Flight Duration vs Price Density Heatmap ({currency})")
 
-        # Use Plotly scatter for large datasets
-        fig3 = px.scatter(
+        fig3 = px.density_heatmap(
             filtered_df,
             x=duration_col,
             y=price_to_use,
-            color=class_col if class_col else None,  # optional coloring by class
+            nbinsx=100,  # number of bins along X
+            nbinsy=100,  # number of bins along Y
+            color_continuous_scale="Viridis",
             labels=label_map,
-            title=f"Flight Duration vs Price ({currency})" + (" (by Class)" if class_col else ""),
+            title=f"Flight Duration vs Price Density Heatmap ({currency})"
         )
-
-        # Small round points and semi-transparent for overlapping
-        fig3.update_traces(marker=dict(size=3, symbol='circle', opacity=0.4))
 
         st.plotly_chart(fig3, use_container_width=True)
