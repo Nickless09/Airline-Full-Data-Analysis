@@ -273,15 +273,33 @@ if price_to_use and not filtered_df.empty:
 #         )
 #         st.plotly_chart(fig3, use_container_width=True)
 
-import hvplot.pandas  # pip install hvplot
+if price_to_use and duration_col and not filtered_df.empty:
+    # Automatically choose chart type based on dataset size
+    n_points = len(filtered_df)
 
-plot = filtered_df.hvplot.hexbin(
-    x=duration_col,
-    y=price_to_use,
-    gridsize=50,
-    cmap='Viridis',
-    logz=True,
-    width=800,
-    height=600
-)
-st.bokeh_chart(hv.render(plot))
+    if n_points < 10000:
+        chart_type = "Scatter Plot"
+        fig3 = px.scatter(
+            filtered_df,
+            x=duration_col,
+            y=price_to_use,
+            color=class_col if class_col else None,
+            title=f"Flight Duration vs Price ({currency})" + (" (by Class)" if class_col else ""),
+            labels=label_map
+        )
+    else:
+        chart_type = "Density Heatmap"
+        fig3 = px.density_heatmap(
+            filtered_df,
+            x=duration_col,
+            y=price_to_use,
+            nbinsx=100,
+            nbinsy=100,
+            color_continuous_scale="Viridis",
+            histfunc="count",
+            labels=label_map,
+            title=f"Flight Duration vs Price Density Heatmap ({currency})"
+        )
+
+    with st.expander(f"Show {chart_type}"):
+        st.plotly_chart(fig3, use_container_width=True)
